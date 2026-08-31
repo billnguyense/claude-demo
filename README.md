@@ -6,6 +6,10 @@ IT Support Service Desk, themed as "UOB Bank". It is a training/demo artifact on
 
 **Live demo:** https://billnguyense.github.io/claude-demo/
 
+## Preview
+
+![Screenshot of the UOB IT Service Desk training demo page](docs/screenshot.png)
+
 ## Running it
 
 Open the file directly — no server required:

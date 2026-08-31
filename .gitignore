@@ -43,3 +43,6 @@ Thumbs.db
 
 # Claude Code local (personal) settings
 .claude/settings.local.json
+
+# Playwright MCP scratch output
+.playwright-mcp/

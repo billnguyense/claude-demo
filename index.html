@@ -462,6 +462,102 @@
   @media (max-width:820px){
     .footer-grid{grid-template-columns:1fr;gap:28px}
   }
+
+  /* ============================================================
+     WHATSAPP CHAT WIDGET  -  floating launcher + suggestions panel
+     A click opens wa.me in a new tab; nothing is sent from this page.
+     Icon is inline SVG (no remote image); no inline handlers (CSP-clean).
+     ============================================================ */
+  .wa-widget{
+    position:fixed;right:24px;bottom:24px;z-index:90;
+    display:flex;flex-direction:column;align-items:flex-end;gap:14px;
+  }
+  .wa-launch{
+    position:relative;
+    display:inline-flex;align-items:center;justify-content:center;
+    width:60px;height:60px;flex:none;padding:0;border:0;border-radius:50%;
+    background:var(--red);color:#fff;cursor:pointer;box-shadow:var(--shadow);
+    transition:transform .14s ease,background .16s ease;
+  }
+  .wa-launch:hover{background:var(--red-deep)}
+  .wa-launch:active{transform:translateY(1px)}
+  .wa-launch svg{width:28px;height:28px;position:relative;z-index:1}
+  .wa-launch .ico-close{display:none}
+  .wa-widget.is-open .wa-launch .ico-wa{display:none}
+  .wa-widget.is-open .wa-launch .ico-close{display:block}
+  @media (prefers-reduced-motion:no-preference){
+    .wa-launch::after{
+      content:"";position:absolute;inset:0;border-radius:50%;
+      animation:waPulse 2.6s ease-out infinite;
+    }
+    .wa-widget.is-open .wa-launch::after{animation:none}
+  }
+  @keyframes waPulse{
+    0%{box-shadow:0 0 0 0 rgba(225,27,34,.5)}
+    70%{box-shadow:0 0 0 14px rgba(225,27,34,0)}
+    100%{box-shadow:0 0 0 0 rgba(225,27,34,0)}
+  }
+
+  .wa-panel{
+    width:340px;max-width:calc(100vw - 48px);
+    max-height:calc(100vh - 116px);
+    display:flex;flex-direction:column;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;
+    transform-origin:bottom right;
+    transition:opacity .2s ease,transform .2s ease;
+  }
+  .wa-panel[hidden]{display:none}
+  .wa-widget:not(.is-open) .wa-panel{
+    opacity:0;transform:translateY(12px) scale(.96);pointer-events:none;
+  }
+  .wa-widget.is-open .wa-panel{opacity:1;transform:none}
+
+  .wa-head{
+    background:var(--ink);color:var(--on-ink);
+    display:flex;gap:12px;align-items:flex-start;padding:18px;
+  }
+  .wa-avatar{
+    display:inline-grid;place-items:center;width:38px;height:38px;flex:none;
+    border-radius:50%;background:var(--red);color:#fff;
+  }
+  .wa-avatar svg{width:22px;height:22px}
+  .wa-head h2{
+    font-family:var(--font-ui);font-size:1rem;font-weight:600;
+    line-height:1.3;color:#fff;
+  }
+  .wa-head p{font-size:.8rem;color:var(--on-ink-dim);margin-top:3px}
+  .wa-close{
+    margin-left:auto;background:transparent;border:0;color:var(--on-ink-dim);
+    cursor:pointer;padding:4px;border-radius:6px;line-height:0;flex:none;
+  }
+  .wa-close:hover{color:#fff}
+
+  .wa-body{padding:18px;overflow-y:auto;flex:1;min-height:0}
+  .wa-intro{font-size:.92rem;color:var(--text);margin-bottom:16px}
+  .wa-eyebrow{
+    font-family:var(--font-mono);font-size:.68rem;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--red-ink);
+    margin-bottom:10px;
+  }
+  .wa-suggestions{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:8px}
+  .wa-suggestions a{
+    display:block;text-decoration:none;color:var(--ink);background:var(--surface);
+    border:1px solid var(--line);border-radius:12px;padding:11px 14px;
+    font-size:.9rem;font-weight:500;
+    transition:border-color .15s ease,background .15s ease,color .15s ease;
+  }
+  .wa-suggestions a:hover,.wa-suggestions a:focus-visible{
+    border-color:var(--red-bright);background:var(--fill);color:var(--red-ink);
+  }
+  .wa-cta{width:100%}
+  .wa-note{font-size:.78rem;color:var(--text-dim);text-align:center;margin-top:12px}
+
+  @media (max-width:480px){
+    .wa-widget{right:16px;bottom:16px;gap:12px}
+    .wa-launch{width:54px;height:54px}
+    .wa-panel{width:calc(100vw - 32px);max-width:none}
+  }
 </style>
 </head>
 
@@ -998,6 +1094,69 @@
   </div>
 </footer>
 
+<!-- ============================================================
+     FLOATING WHATSAPP CHAT WIDGET
+     Opens https://wa.me/6586920432 in a new tab only when the user
+     clicks a link. Icon is inline SVG (no remote image); the toggle
+     is wired with addEventListener (no inline handlers), so the
+     Content-Security-Policy stays intact.
+     ============================================================ -->
+<div class="wa-widget" id="waWidget">
+  <div class="wa-panel" id="waPanel" role="dialog" aria-labelledby="waTitle" hidden>
+    <div class="wa-head">
+      <span class="wa-avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.04 2.01c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01a9.86 9.86 0 0 0-7.02-2.9zM12.05 20.07h-.01c-1.52 0-3.01-.41-4.31-1.18l-.31-.18-3.2.84.85-3.12-.2-.32a8.23 8.23 0 0 1-1.26-4.39c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.25 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43-.14-.01-.31-.01-.47-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/>
+        </svg>
+      </span>
+      <div>
+        <h2 id="waTitle">ABC IT Service Desk</h2>
+        <p>Chat on WhatsApp &middot; Mon&ndash;Fri, 8am&ndash;8pm SGT</p>
+      </div>
+      <button type="button" class="wa-close" id="waClose" aria-label="Close chat">
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="wa-body">
+      <p class="wa-intro">Pick a question below to start a WhatsApp chat with the
+        Service Desk &mdash; or open a blank one.</p>
+      <p class="wa-eyebrow">Suggested questions</p>
+      <ul class="wa-suggestions">
+        <li><a href="https://wa.me/6586920432?text=How%20do%20I%20reset%20my%20network%20password%3F"
+               target="_blank" rel="noopener noreferrer">How do I reset my network password?</a></li>
+        <li><a href="https://wa.me/6586920432?text=I%20can%27t%20connect%20to%20the%20VPN%20from%20home."
+               target="_blank" rel="noopener noreferrer">I can&rsquo;t connect to the VPN from home</a></li>
+        <li><a href="https://wa.me/6586920432?text=My%20laptop%20won%27t%20boot%20%E2%80%94%20what%20should%20I%20do%3F"
+               target="_blank" rel="noopener noreferrer">My laptop won&rsquo;t boot</a></li>
+        <li><a href="https://wa.me/6586920432?text=How%20do%20I%20request%20new%20software%3F"
+               target="_blank" rel="noopener noreferrer">How do I request new software?</a></li>
+        <li><a href="https://wa.me/6586920432?text=I%20received%20a%20suspicious%20email."
+               target="_blank" rel="noopener noreferrer">I received a suspicious email</a></li>
+      </ul>
+      <a class="btn btn-primary wa-cta" href="https://wa.me/6586920432"
+         target="_blank" rel="noopener noreferrer">
+        Chat on WhatsApp <span class="arrow" aria-hidden="true">&rarr;</span>
+      </a>
+      <p class="wa-note">Opens WhatsApp in a new tab. Training demo &mdash; for
+        illustration only.</p>
+    </div>
+  </div>
+
+  <button type="button" class="wa-launch" id="waLaunch"
+          aria-expanded="false" aria-controls="waPanel" aria-label="Open WhatsApp chat">
+    <svg class="ico-wa" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12.04 2.01c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01a9.86 9.86 0 0 0-7.02-2.9zM12.05 20.07h-.01c-1.52 0-3.01-.41-4.31-1.18l-.31-.18-3.2.84.85-3.12-.2-.32a8.23 8.23 0 0 1-1.26-4.39c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.25 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43-.14-.01-.31-.01-.47-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/>
+    </svg>
+    <svg class="ico-close" width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor"
+            stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+  </button>
+</div>
+
 <script>
 /* ============================================================
    APP SCRIPT
@@ -1389,6 +1548,62 @@
   /* ---- Initial counter state ---- */
   subjectCount.textContent = '0/100';
   updateDescCount();
+
+  /* ============================================================
+     WHATSAPP CHAT WIDGET
+     Toggles a suggestions panel. Every suggestion and the CTA is a
+     plain <a href="https://wa.me/..."> the user clicks - this page
+     never sends anything. No storage, no network from here.
+     ============================================================ */
+  var waWidget = document.getElementById('waWidget');
+  var waLaunch = document.getElementById('waLaunch');
+  var waPanel = document.getElementById('waPanel');
+  var waClose = document.getElementById('waClose');
+
+  function waIsOpen(){ return waWidget.classList.contains('is-open'); }
+
+  function openWa(){
+    waPanel.hidden = false;
+    void waPanel.offsetWidth;              /* reflow so the entrance transition runs */
+    waWidget.classList.add('is-open');
+    waLaunch.setAttribute('aria-expanded', 'true');
+    waLaunch.setAttribute('aria-label', 'Close WhatsApp chat');
+    waClose.focus();
+  }
+
+  function closeWa(returnFocus){
+    if (!waIsOpen()) return;
+    waWidget.classList.remove('is-open');
+    waLaunch.setAttribute('aria-expanded', 'false');
+    waLaunch.setAttribute('aria-label', 'Open WhatsApp chat');
+    if (prefersReduced){
+      waPanel.hidden = true;              /* no transition under reduced motion */
+    } else {
+      var done = function(e){
+        if (e.target !== waPanel || e.propertyName !== 'transform') return;
+        waPanel.hidden = true;
+        waPanel.removeEventListener('transitionend', done);
+      };
+      waPanel.addEventListener('transitionend', done);
+    }
+    if (returnFocus !== false) waLaunch.focus();
+  }
+
+  waLaunch.addEventListener('click', function(){
+    if (waIsOpen()) closeWa(); else openWa();
+  });
+  waClose.addEventListener('click', function(){ closeWa(); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && waIsOpen()) closeWa();
+  });
+  document.addEventListener('click', function(e){
+    if (waIsOpen() && !waWidget.contains(e.target)) closeWa(false);
+  });
+  /* Clicking a suggestion / CTA opens WhatsApp in a new tab; collapse the panel. */
+  waPanel.addEventListener('click', function(e){
+    if (e.target.closest('a')) closeWa(false);
+  });
 })();
 </script>
 </body>

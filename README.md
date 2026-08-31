@@ -31,6 +31,9 @@ single IIFE `<script>`. Notable pieces:
 - A generated ticket reference (`ABC-ITSD-YYYYMMDD-####`) and a priority-based SLA shown on
   the success panel. The reference is a display string, not a security token.
 - A searchable, one-at-a-time **FAQ index** (custom `aria-expanded` accordion).
+- A floating **WhatsApp chat widget** (bottom-right) themed to the site's ink/red palette.
+  It opens a suggestions panel; each suggested query and the CTA is a plain
+  `https://wa.me/6586920432` deep link the user clicks — nothing is sent from the page.
 - An advisory heuristic that **warns but never blocks** if a password- or card-like string
   is typed into the Description field.
 - Motion that stays out of the way: a scroll-progress rail, a hero load sequence,
@@ -45,7 +48,9 @@ it "works":
 - **No network**: no `fetch`/XHR/beacon/WebSocket, no external scripts, styles, fonts, or
   images, no CDN. Enforced by a `Content-Security-Policy` `<meta>` tag
   (`default-src 'none'`; `form-action 'none'`; `frame-ancestors 'none'`). No inline event
-  handlers — listeners are wired with `addEventListener`.
+  handlers — listeners are wired with `addEventListener`. The only outbound path is the
+  WhatsApp widget's `wa.me` links, which are user-initiated navigations that open in a new
+  tab; the page still makes no automatic requests and sends nothing on its own.
 - **No persistence**: no `localStorage`, `sessionStorage`, cookies, or IndexedDB. Submitted
   tickets live only in an in-memory array and vanish on reload.
 - **No `innerHTML` with dynamic data**: all runtime-set text goes through `textContent` or

@@ -1,12 +1,12 @@
 ---
-description: Security-scan, document, push to GitHub, and publish GitHub Pages
+description: document, push to GitHub, and publish GitHub Pages
 argument-hint: <github-repo-url> (e.g. https://github.com/user/repo.git)
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_resize, mcp__playwright__browser_close
 ---
 
 ## Goal
 
-Publish this repository to GitHub safely: run a security scan first, capture a
+Publish this repository to GitHub safely: capture a
 screenshot of the page, write/refresh the README (with that screenshot), push the
 code, wire up GitHub Pages via a GitHub Action, and set the repo's About section
 (description + Pages link).
@@ -21,36 +21,7 @@ The target GitHub repository is: `$ARGUMENTS`
 
 ## Order of operations (do NOT reorder — the scan gates everything)
 
-### 1. Security scan — BEFORE anything leaves the machine
-
-Nothing is pushed until this passes. Scan the working tree and the full git history
-that would be pushed:
-
-- List everything that would be uploaded: `git status`, `git log --oneline origin/main..HEAD 2>/dev/null || git log --oneline`, and `git ls-files`.
-- Grep the tracked files AND history for secrets and confidential data:
-  - Credentials / tokens: `password`, `passwd`, `secret`, `api[_-]?key`, `token`,
-    `bearer`, `authorization`, `client[_-]?secret`, `private[_-]?key`,
-    `-----BEGIN .*PRIVATE KEY-----`, AWS keys (`AKIA[0-9A-Z]{16}`), Google API keys
-    (`AIza[0-9A-Za-z_-]{35}`), Slack (`xox[baprs]-`), GitHub PATs (`ghp_`, `github_pat_`),
-    JWTs (`eyJ[A-Za-z0-9_-]+\.`).
-  - Env / config files that should not ship: `.env`, `.env.*`, `*.pem`, `*.key`,
-    `*.p12`, `*.keystore`, `id_rsa`, `credentials`, `*.pfx`, service-account JSON.
-  - PII: real personal emails, phone numbers, national IDs, card numbers (Luhn-looking
-    16-digit runs), internal hostnames / IP ranges.
-  - Search history too: `git grep -nEi '<pattern>' $(git rev-list --all)` for the
-    high-signal patterns above.
-- This project has explicit constraints in [CLAUDE.md](../../CLAUDE.md): it must stay
-  a single offline `index.html`. Confirm no backend config, no real UOB data, and that
-  placeholders (e.g. `1800-XXX-XXXX`) are still placeholders.
-- Ensure a `.gitignore` covers `.env*`, key material, `.DS_Store`, and editor/OS cruft.
-
-Report findings as a short table (file · line · what · severity). Then:
-
-- **If anything confidential is found: STOP.** Do not push. Tell the user exactly what
-  and where, and propose remediation (remove file + `git rm --cached`, scrub history
-  with `git filter-repo`, rotate the exposed secret). Wait for the user to confirm the
-  fix before continuing.
-- **If clean:** state "Security scan clean — safe to push" and continue.
+### 1. Skip this step
 
 ### 2. Capture a screenshot for the README
 

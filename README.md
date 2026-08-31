@@ -4,6 +4,8 @@ A single self-contained HTML page ([index.html](index.html)) that mockups an int
 IT Support Service Desk, themed as "UOB Bank". It is a training/demo artifact only —
 **not a real product, and it must not be presented as one.**
 
+**Live demo:** https://billnguyense.github.io/claude-demo/
+
 ## Running it
 
 Open the file directly — no server required:
